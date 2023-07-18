@@ -97,13 +97,12 @@ struct femtoUniversePairTaskTrackTrack {
   } trackonefilter;
 
   /// Partition for particle 1
-  Partition<FemtoFullParticles> partsOne = (aod::femtouniverseparticle::partType == uint8_t(aod::femtouniverseparticle::ParticleType::kTrack))
-                                                                                    && (aod::femtouniverseparticle::pt > trackonefilter.cfgPtLowPart1) && (aod::femtouniverseparticle::pt < trackonefilter.cfgPtHighPart1)     // pT cuts
-                                                                                    && (aod::femtouniverseparticle::eta > trackonefilter.cfgEtaLowPart1) && (aod::femtouniverseparticle::eta < trackonefilter.cfgEtaHighPart1) // Eta cuts
-                                                                                    && (o2::aod::track::dcaXY < trackonefilter.cfgDcaXYPart1) && (o2::aod::track::dcaZ < trackonefilter.cfgDcaZPart1);                         // DCA cuts for XY and Z
-                                                                                    && (aod::femtouniverseparticle::tpcNClsFound > (uint8_t)trackonefilter.cfgTpcClPart1)                                                      // Number of found TPC clusters
-                                                                                    && (aod::femtouniverseparticle::tpcNClsCrossedRows > (uint8_t)trackonefilter.cfgTpcCrosRoPart1)                                            // Crossed rows TPC
-                                                                                    && (aod::femtouniverseparticle::itsChi2NCl < trackonefilter.cfgChi2ItsPart1) && (aod::femtouniverseparticle::tpcChi2NCl < trackonefilter.cfgChi2TpcPart1); //&& // chi2 cuts
+  Partition<FemtoFullParticles> partsOne = (aod::femtouniverseparticle::partType == uint8_t(aod::femtouniverseparticle::ParticleType::kTrack)) && (aod::femtouniverseparticle::pt > trackonefilter.cfgPtLowPart1) && (aod::femtouniverseparticle::pt < trackonefilter.cfgPtHighPart1) // pT cuts
+                                           && (aod::femtouniverseparticle::eta > trackonefilter.cfgEtaLowPart1) && (aod::femtouniverseparticle::eta < trackonefilter.cfgEtaHighPart1)                                                                                                 // Eta cuts
+                                           && (o2::aod::track::dcaXY < trackonefilter.cfgDcaXYPart1) && (o2::aod::track::dcaZ < trackonefilter.cfgDcaZPart1);                                                                                                                         // DCA cuts for XY and Z
+  &&(aod::femtouniverseparticle::tpcNClsFound > (uint8_t)trackonefilter.cfgTpcClPart1)                                                                                                                                                                                                // Number of found TPC clusters
+    && (aod::femtouniverseparticle::tpcNClsCrossedRows > (uint8_t)trackonefilter.cfgTpcCrosRoPart1)                                                                                                                                                                                   // Crossed rows TPC
+    && (aod::femtouniverseparticle::itsChi2NCl < trackonefilter.cfgChi2ItsPart1) && (aod::femtouniverseparticle::tpcChi2NCl < trackonefilter.cfgChi2TpcPart1);                                                                                                                        //&& // chi2 cuts
   Partition<soa::Join<aod::FDParticles, aod::FDMCLabels>> partsOneMC = (aod::femtouniverseparticle::partType == uint8_t(aod::femtouniverseparticle::ParticleType::kTrack)); // && ((aod::femtouniverseparticle::cut & ConfCutPartOne) == ConfCutPartOne);
 
   /// Histogramming for particle 1
@@ -128,13 +127,12 @@ struct femtoUniversePairTaskTrackTrack {
     Configurable<float> cfgChi2ItsPart2{"cfgChi2ItsPart2", 36.0, "Chi2 / cluster for the ITS track segment for the second particle"};
   } tracktwofilter;
   /// Partition for particle 2
-  Partition<FemtoFullParticles> partsTwo = (aod::femtouniverseparticle::partType == uint8_t(aod::femtouniverseparticle::ParticleType::kTrack)) 
-                                                                                    && (aod::femtouniverseparticle::pt > tracktwofilter.cfgPtLowPart2) && (aod::femtouniverseparticle::pt < tracktwofilter.cfgPtHighPart2)      // pT cuts
-                                                                                    && (aod::femtouniverseparticle::eta > tracktwofilter.cfgEtaLowPart2) && (aod::femtouniverseparticle::eta < tracktwofilter.cfgEtaHighPart2)  // Eta cuts
-                                                                                    && (o2::aod::track::dcaXY < tracktwofilter.cfgDcaXYPart2) && (o2::aod::track::dcaZ < tracktwofilter.cfgDcaZPart2)                           // DCA cuts for XY and Z
-                                                                                    && (aod::femtouniverseparticle::tpcNClsFound > (uint8_t)trackonefilter.cfgTpcClPart2)                                                       // Number of found TPC clusters
-                                                                                    && (aod::femtouniverseparticle::tpcNClsCrossedRows > (uint8_t)trackonefilter.cfgTpcCrosRoPart2)                                             // Crossed rows TPC
-                                                                                    && (aod::femtouniverseparticle::itsChi2NCl < trackonefilter.cfgChi2ItsPart2) && (aod::femtouniverseparticle::tpcChi2NCl < trackonefilter.cfgChi2TpcPart2);
+  Partition<FemtoFullParticles> partsTwo = (aod::femtouniverseparticle::partType == uint8_t(aod::femtouniverseparticle::ParticleType::kTrack)) && (aod::femtouniverseparticle::pt > tracktwofilter.cfgPtLowPart2) && (aod::femtouniverseparticle::pt < tracktwofilter.cfgPtHighPart2) // pT cuts
+                                           && (aod::femtouniverseparticle::eta > tracktwofilter.cfgEtaLowPart2) && (aod::femtouniverseparticle::eta < tracktwofilter.cfgEtaHighPart2)                                                                                                 // Eta cuts
+                                           && (o2::aod::track::dcaXY < tracktwofilter.cfgDcaXYPart2) && (o2::aod::track::dcaZ < tracktwofilter.cfgDcaZPart2)                                                                                                                          // DCA cuts for XY and Z
+                                           && (aod::femtouniverseparticle::tpcNClsFound > (uint8_t)trackonefilter.cfgTpcClPart2)                                                                                                                                                      // Number of found TPC clusters
+                                           && (aod::femtouniverseparticle::tpcNClsCrossedRows > (uint8_t)trackonefilter.cfgTpcCrosRoPart2)                                                                                                                                            // Crossed rows TPC
+                                           && (aod::femtouniverseparticle::itsChi2NCl < trackonefilter.cfgChi2ItsPart2) && (aod::femtouniverseparticle::tpcChi2NCl < trackonefilter.cfgChi2TpcPart2);
 
   Partition<soa::Join<aod::FDParticles, aod::FDMCLabels>> partsTwoMC = (aod::femtouniverseparticle::partType == uint8_t(aod::femtouniverseparticle::ParticleType::kTrack));
 
