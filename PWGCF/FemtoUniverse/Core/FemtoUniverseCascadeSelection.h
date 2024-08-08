@@ -87,7 +87,7 @@ class FemtoUniverseCascadeSelection
 
  public:
   FemtoUniverseCascadeSelection()
-    : nPtCascadeMinSel(0), nPtCascadeMaxSel(0), nEtaCascadeMaxSel(0), nDCAV0DaughMax(0), nCPAV0Min(0), nTranRadV0Min(0), nTranRadV0Max(0), nV0DecVtxMax(0), nDCACascadeDaughMax(0), nCPACascadeMin(0), nTranRadCascadeMin(0), nTranRadCascadeMax(0), nDecVtxMax(0), nDCAPosToPV(0), nDCANegToPV(0), nDCABachToPV(0), nDCAV0ToPV(0), pTCascadeMin(9999999.), pTCascadeMax(-9999999.), etaCascadeMax(-9999999.), DCAV0DaughMax(-9999999.), CPAV0Min(9999999.), TranRadV0Min(9999999.), TranRadV0Max(-9999999.), V0DecVtxMax(-9999999.), DCACascadeDaughMax(-9999999.), CPACascadeMin(9999999.), TranRadCascadeMin(9999999.), TranRadCascadeMax(-9999999.), DecVtxMax(-9999999.), DCAPosToPV(9999999.), DCANegToPV(9999999.), DCABachToPV(9999999.), DCAV0ToPV(9999999.), fV0InvMassLowLimit(1.05), fV0InvMassUpLimit(1.3), fInvMassLowLimit(1.25), fInvMassUpLimit(1.4), fRejectOmega(false), fInvMassOmegaLowLimit(1.5), fInvMassOmegaUpLimit(2.0)/*, nSigmaPIDOffsetTPC(0.)*/
+    : nPtCascadeMinSel(0), nPtCascadeMaxSel(0), nEtaCascadeMaxSel(0), nDCAV0DaughMax(0), nCPAV0Min(0), nTranRadV0Min(0), nTranRadV0Max(0), nV0DecVtxMax(0), nDCACascadeDaughMax(0), nCPACascadeMin(0), nTranRadCascadeMin(0), nTranRadCascadeMax(0), nDecVtxMax(0), nDCAPosToPV(0), nDCANegToPV(0), nDCABachToPV(0), nDCAV0ToPV(0), pTCascadeMin(9999999.), pTCascadeMax(-9999999.), etaCascadeMax(-9999999.), DCAV0DaughMax(-9999999.), CPAV0Min(9999999.), TranRadV0Min(9999999.), TranRadV0Max(-9999999.), V0DecVtxMax(-9999999.), DCACascadeDaughMax(-9999999.), CPACascadeMin(9999999.), TranRadCascadeMin(9999999.), TranRadCascadeMax(-9999999.), DecVtxMax(-9999999.), DCAPosToPV(9999999.), DCANegToPV(9999999.), DCABachToPV(9999999.), DCAV0ToPV(9999999.), fV0InvMassLowLimit(1.05), fV0InvMassUpLimit(1.3), fInvMassLowLimit(1.25), fInvMassUpLimit(1.4), fRejectOmega(false), fInvMassOmegaLowLimit(1.5), fInvMassOmegaUpLimit(2.0) /*, nSigmaPIDOffsetTPC(0.)*/
   {
   }
 
@@ -221,7 +221,7 @@ class FemtoUniverseCascadeSelection
   float fInvMassOmegaLowLimit;
   float fInvMassOmegaUpLimit;
 
-  //float nSigmaPIDOffsetTPC;
+  // float nSigmaPIDOffsetTPC;
 
   FemtoUniverseTrackSelection PosDaughTrack;
   FemtoUniverseTrackSelection NegDaughTrack;
@@ -482,7 +482,7 @@ bool FemtoUniverseCascadeSelection::isSelectedMinimal(Col const& col, Casc const
     }
   }
   // DCA pos neg bach v0
-  
+
   // FIX ME: isSelectedMinimal for daughters desn't work yet
   /*
   if (!PosDaughTrack.isSelectedMinimal(posTrack)) {
