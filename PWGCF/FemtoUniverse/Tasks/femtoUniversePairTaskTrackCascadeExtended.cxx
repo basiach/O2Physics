@@ -286,7 +286,6 @@ struct femtoUniversePairTaskTrackCascadeExtended { // o2-linter: disable=name/st
       if (!invMCascade(part.mLambda(), part.mAntiLambda()))
         continue;
 
-
       cascQAHistos.fillQA<false, true>(part);
 
       const auto& posChild = parts.iteratorAt(part.index() - 3);
