@@ -287,8 +287,6 @@ struct FemtoUniverseProducerTask {
   FemtoUniversePhiSelection phiCuts;
   struct : o2::framework::ConfigurableGroup {
     /// Phi meson
-    Configurable<float> confInvMassLowLimitPhi{"confInvMassLowLimitPhi", 1.011, "Lower limit of the Phi invariant mass"}; // change that to do invariant mass cut
-    Configurable<float> confInvMassUpLimitPhi{"confInvMassUpLimitPhi", 1.027, "Upper limit of the Phi invariant mass"};
     Configurable<float> confPtLowLimitPhi{"confPtLowLimitPhi", 0.8, "Lower limit of the Phi pT."};
     Configurable<float> confPtHighLimitPhi{"confPtHighLimitPhi", 4.0, "Higher limit of the Phi pT."};
     // Phi meson daughters
@@ -1185,6 +1183,7 @@ struct FemtoUniverseProducerTask {
       childIDs[0] = rowInPrimaryTrackTablePos; // pos
       childIDs[1] = 0;                         // neg
       childIDs[2] = 0;                         // bachelor
+      float hasTOF = posTrackCasc.hasTOF() ? 1 : 0;
       outputCascParts(outputCollision.lastIndex(),
                       casc.positivept(),
                       casc.positiveeta(),
@@ -1192,7 +1191,7 @@ struct FemtoUniverseProducerTask {
                       aod::femtouniverseparticle::ParticleType::kV0Child,
                       0, // cutContainerV0.at(femto_universe_v0_selection::V0ContainerPosition::kPosCuts),
                       0, // cutContainerV0.at(femto_universe_v0_selection::V0ContainerPosition::kPosPID),
-                      0.,
+                      hasTOF,
                       childIDs,
                       0,
                       0,
@@ -1216,6 +1215,7 @@ struct FemtoUniverseProducerTask {
       childIDs[0] = 0;                         // pos
       childIDs[1] = rowInPrimaryTrackTableNeg; // neg
       childIDs[2] = 0;                         // bachelor
+      hasTOF = negTrackCasc.hasTOF() ? 1 : 0;
       outputCascParts(outputCollision.lastIndex(),
                       casc.negativept(),
                       casc.negativeeta(),
@@ -1223,7 +1223,7 @@ struct FemtoUniverseProducerTask {
                       aod::femtouniverseparticle::ParticleType::kV0Child,
                       0, // cutContainerV0.at(femto_universe_v0_selection::V0ContainerPosition::kNegCuts),
                       0, // cutContainerV0.at(femto_universe_v0_selection::V0ContainerPosition::kNegPID),
-                      0.,
+                      hasTOF,
                       childIDs,
                       0,
                       0,
@@ -1248,6 +1248,7 @@ struct FemtoUniverseProducerTask {
       childIDs[0] = 0;                          // pos
       childIDs[1] = 0;                          // neg
       childIDs[2] = rowInPrimaryTrackTableBach; // bachelor
+      hasTOF = bachTrackCasc.hasTOF() ? 1 : 0;
       outputCascParts(outputCollision.lastIndex(),
                       casc.bachelorpt(),
                       casc.bacheloreta(),
@@ -1255,7 +1256,7 @@ struct FemtoUniverseProducerTask {
                       aod::femtouniverseparticle::ParticleType::kCascadeBachelor,
                       0, // cutContainerV0.at(femto_universe_v0_selection::V0ContainerPosition::kNegCuts),
                       0, // cutContainerV0.at(femto_universe_v0_selection::V0ContainerPosition::kNegPID),
-                      0.,
+                      hasTOF,
                       childIDs,
                       0,
                       0,
@@ -1632,10 +1633,6 @@ struct FemtoUniverseProducerTask {
 
       float phiPhi = RecoDecay::constrainAngle(sumVec.Phi(), 0);
       float phiM = sumVec.M();
-
-      if (((phiM < ConfPhiSelection.confInvMassLowLimitPhi.value) || (phiM > ConfPhiSelection.confInvMassUpLimitPhi.value))) {
-        continue;
-      }
 
       phiCuts.fillQA<aod::femtouniverseparticle::ParticleType::kPhi, aod::femtouniverseparticle::ParticleType::kPhiChild>(col, p1, p1, p2, 321, -321); ///\todo fill QA also for daughters
 
