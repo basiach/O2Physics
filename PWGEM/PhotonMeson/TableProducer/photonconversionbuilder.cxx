@@ -15,6 +15,7 @@
 //
 // \author Daiki Sekihata <daiki.sekihata@cern.ch>, Tokyo
 
+#include "PWGEM/Dilepton/Utils/PairUtilities.h"
 #include "PWGEM/PhotonMeson/DataModel/gammaTables.h"
 #include "PWGEM/PhotonMeson/Utils/PCMUtilities.h"
 #include "PWGEM/PhotonMeson/Utils/TrackSelection.h"
@@ -62,15 +63,18 @@ using namespace o2::pwgem::photonmeson;
 using std::array;
 
 using MyCollisions = soa::Join<aod::Collisions, aod::EvSels, aod::EMEvSels>;
-using MyCollisionsWithSWT = soa::Join<MyCollisions, aod::EMSWTriggerInfosTMP>;
+using MyCollisionsWithSWT = soa::Join<MyCollisions, aod::EMSWTriggerBitsTMP>;
 using MyCollisionsMC = soa::Join<MyCollisions, aod::McCollisionLabels>;
 
-using MyTracksIU = soa::Join<aod::TracksIU, aod::TracksExtra, aod::TracksCovIU, aod::TracksDCA, aod::pidTPCFullEl, aod::pidTPCFullPi>;
+using MyTracksIU = soa::Join<aod::TracksIU, aod::TracksExtra, aod::TracksCovIU, aod::pidTPCFullEl, aod::pidTPCFullPi>;
 using MyTracksIUMC = soa::Join<MyTracksIU, aod::McTrackLabels, aod::mcTPCTuneOnData>;
 
 struct PhotonConversionBuilder {
   Produces<aod::V0PhotonsKF> v0photonskf;
   Produces<aod::V0Legs> v0legs;
+  Produces<aod::V0LegsXYZ> v0legsXYZ;
+  Produces<aod::V0LegsDeDxMC> v0legsDeDxMC;
+  Produces<aod::V0PhotonsPhiV> v0photonsphiv;
   // Produces<aod::V0PhotonsKFCov> v0photonskfcov;
   // Produces<aod::EMEventsNgPCM> events_ngpcm;
 
@@ -164,6 +168,7 @@ struct PhotonConversionBuilder {
       {"V0/hRxy_minX_ITSTPC_TPC", "min trackiu X vs. R_{xy};trackiu X (cm);min trackiu X - R_{xy} (cm)", {HistType::kTH2F, {{100, 0.0f, 100.f}, {100, -50.0, 50.0f}}}},
       {"V0/hRxy_minX_TPC_TPC", "min trackiu X vs. R_{xy};trackiu X (cm);min trackiu X - R_{xy} (cm)", {HistType::kTH2F, {{100, 0.0f, 100.f}, {100, -50.0, 50.0f}}}},
       {"V0/hPCA_diffX", "PCA vs. trackiu X - R_{xy};distance btween 2 legs (cm);min trackiu X - R_{xy} (cm)", {HistType::kTH2F, {{500, 0.0f, 5.f}, {100, -50.0, 50.0f}}}},
+      {"V0/hPhiV", "#phi_{V}; #phi_{V} (rad.)", {HistType::kTH1F, {{500, 0.0f, 2 * M_PI}}}},
       {"V0Leg/hPt", "pT of leg at SV;p_{T,e} (GeV/c)", {HistType::kTH1F, {{1000, 0.0f, 10.0f}}}},
       {"V0Leg/hEtaPhi", "#eta vs. #varphi of leg at SV;#varphi (rad.);#eta", {HistType::kTH2F, {{72, 0.0f, 2 * M_PI}, {200, -1, +1}}}},
       {"V0Leg/hRelDeltaPt", "pT resolution;p_{T} (GeV/c);#Deltap_{T}/p_{T}", {HistType::kTH2F, {{1000, 0.f, 10.f}, {100, 0, 1}}}},
@@ -367,27 +372,18 @@ struct PhotonConversionBuilder {
   template <bool isMC, typename TTrack, typename TShiftedTrack, typename TKFParticle>
   void fillTrackTable(TTrack const& track, TShiftedTrack const& shiftedtrack, TKFParticle const& kfp, const float dcaXY, const float dcaZ)
   {
-    float itsChi2NCl = (track.hasITS() && track.itsChi2NCl() > 0.f) ? track.itsChi2NCl() : -299.f;
-    float tpcChi2NCl = (track.hasTPC() && track.tpcChi2NCl() > 0.f) ? track.tpcChi2NCl() : -299.f;
-    float tpcSignal = track.hasTPC() ? track.tpcSignal() : 0.f;
-    float tpcNSigmaEl = track.hasTPC() ? track.tpcNSigmaEl() : -299.f;
-    float tpcNSigmaPi = track.hasTPC() ? track.tpcNSigmaPi() : -299.f;
-
-    float mcTunedTPCSignal = 0.f;
-    if constexpr (isMC) {
-      mcTunedTPCSignal = track.mcTunedTPCSignal();
-      if (track.hasTPC()) {
-        mcTunedTPCSignal = track.mcTunedTPCSignal();
-      }
-    }
-
     v0legs(track.collisionId(), track.globalIndex(), track.sign(),
-           kfp.GetPx(), kfp.GetPy(), kfp.GetPz(), static_cast<int16_t>(dcaXY * 1e+2), static_cast<int16_t>(dcaZ * 1e+2),
+           kfp.GetPx(), kfp.GetPy(), kfp.GetPz(), dcaXY, dcaZ,
            track.tpcNClsFindable(), track.tpcNClsFindableMinusFound(), track.tpcNClsFindableMinusCrossedRows(), track.tpcNClsShared(),
-           static_cast<int16_t>(tpcChi2NCl * 1e+2), track.tpcInnerParam(), static_cast<uint16_t>(tpcSignal * 1e+2),
-           static_cast<int16_t>(tpcNSigmaEl * 1e+2), static_cast<int16_t>(tpcNSigmaPi * 1e+2),
-           track.itsClusterSizes(), static_cast<int16_t>(itsChi2NCl * 1e+2), track.detectorMap(), static_cast<uint16_t>(mcTunedTPCSignal * 1e+2),
-           static_cast<uint16_t>(shiftedtrack.getX() * 1e+2), static_cast<int16_t>(shiftedtrack.getY() * 1e+2), static_cast<int16_t>(shiftedtrack.getZ() * 1e+2), shiftedtrack.getTgl());
+           track.tpcChi2NCl(), track.tpcInnerParam(), track.tpcSignal(),
+           track.tpcNSigmaEl(), track.tpcNSigmaPi(),
+           track.itsClusterSizes(), track.itsChi2NCl(), track.detectorMap());
+
+    v0legsXYZ(shiftedtrack.getX(), shiftedtrack.getY(), shiftedtrack.getZ());
+
+    if constexpr (isMC) {
+      v0legsDeDxMC(track.mcTunedTPCSignal());
+    }
   }
 
   template <bool isMC, class TBCs, class TCollisions, class TTracks, typename TV0>
@@ -638,6 +634,8 @@ struct PhotonConversionBuilder {
     pca_map[std::make_tuple(v0.globalIndex(), collision.globalIndex(), pos.globalIndex(), ele.globalIndex())] = pca_kf;
     cospa_map[std::make_tuple(v0.globalIndex(), collision.globalIndex(), pos.globalIndex(), ele.globalIndex())] = cospa_kf;
 
+    float phiv = o2::aod::pwgem::dilepton::utils::pairutil::getPhivPair(pos.px(), pos.py(), pos.pz(), ele.px(), ele.py(), ele.pz(), pos.sign(), ele.sign(), d_bz);
+
     if (filltable) {
       registry.fill(HIST("V0/hAP"), alpha, qt);
       registry.fill(HIST("V0/hConversionPointXY"), gammaKF_DecayVtx.GetX(), gammaKF_DecayVtx.GetY());
@@ -651,6 +649,7 @@ struct PhotonConversionBuilder {
       registry.fill(HIST("V0/hPCA_Rxy"), rxy, pca_kf);
       registry.fill(HIST("V0/hDCAxyz"), dca_xy_v0_to_pv, dca_z_v0_to_pv);
       registry.fill(HIST("V0/hPCA_diffX"), pca_kf, std::min(pTrack.getX(), nTrack.getX()) - rxy); // trackiu.x() - rxy should be positive
+      registry.fill(HIST("V0/hPhiV"), phiv);
 
       float cospaXY_kf = cospaXY_KF(gammaKF_DecayVtx, KFPV);
       float cospaRZ_kf = cospaRZ_KF(gammaKF_DecayVtx, KFPV);
@@ -684,9 +683,10 @@ struct PhotonConversionBuilder {
       v0photonskf(collision.globalIndex(), v0.globalIndex(), v0legs.lastIndex() + 1, v0legs.lastIndex() + 2,
                   gammaKF_DecayVtx.GetX(), gammaKF_DecayVtx.GetY(), gammaKF_DecayVtx.GetZ(),
                   gammaKF_PV.GetPx(), gammaKF_PV.GetPy(), gammaKF_PV.GetPz(),
-                  static_cast<uint16_t>(v0_sv.M() * 1e+5), static_cast<int16_t>(dca_xy_v0_to_pv * 1e+2), static_cast<int16_t>(dca_z_v0_to_pv * 1e+2),
-                  static_cast<uint16_t>(cospa_kf * 5e+4), static_cast<uint16_t>(cospaXY_kf * 5e+4), static_cast<uint16_t>(cospaRZ_kf * 5e+4),
-                  static_cast<uint16_t>(pca_kf * 1e+4), static_cast<int16_t>(alpha * 1e+4), static_cast<uint16_t>(qt * 1e+5), static_cast<uint16_t>(chi2kf * 1e+1));
+                  v0_sv.M(), dca_xy_v0_to_pv, dca_z_v0_to_pv,
+                  cospa_kf, cospaXY_kf, cospaRZ_kf,
+                  pca_kf, alpha, qt, chi2kf);
+      v0photonsphiv(phiv);
 
       // v0photonskfcov(gammaKF_PV.GetCovariance(9), gammaKF_PV.GetCovariance(14), gammaKF_PV.GetCovariance(20), gammaKF_PV.GetCovariance(13), gammaKF_PV.GetCovariance(19), gammaKF_PV.GetCovariance(18));
 

@@ -145,6 +145,7 @@ DECLARE_SOA_TABLE(HfCandDpLites, "AOD", "HFCANDDPLITE",
                   full::Phi,
                   full::Y,
                   full::Centrality,
+                  collision::NumContrib,
                   hf_cand_3prong::FlagMcMatchRec,
                   hf_cand_3prong::OriginMcRec,
                   hf_cand_3prong::FlagMcDecayChanRec)
@@ -371,6 +372,7 @@ struct HfTreeCreatorDplusToPiKPi {
         candidate.phi(),
         hfHelper.yDplus(candidate),
         cent,
+        coll.numContrib(),
         flagMc,
         originMc,
         channelMc);
