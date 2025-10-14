@@ -179,21 +179,16 @@ struct kstarInOO {
     }
 
     if (cfgMcHistos) {
+
       histos.add("nEvents_MC", "nEvents_MC", kTH1F, {{4, 0.0, 4.0}});
       histos.add("nEvents_MC_True", "nEvents_MC_True", kTH1F, {{4, 0.0, 4.0}});
+      histos.add("hMC_kstar_True", "hMC_kstar_True", kTHnSparseF, {cfgCentAxis, ptAxis});
 
       histos.add("hMC_USS", "hMC_USS", kTHnSparseF, {cfgCentAxis, ptAxis, minvAxis});
       histos.add("hMC_LSS", "hMC_LSS", kTHnSparseF, {cfgCentAxis, ptAxis, minvAxis});
       histos.add("hMC_USS_Mix", "hMC_USS_Mix", kTHnSparseF, {cfgCentAxis, ptAxis, minvAxis});
       histos.add("hMC_LSS_Mix", "hMC_LSS_Mix", kTHnSparseF, {cfgCentAxis, ptAxis, minvAxis});
       histos.add("hMC_USS_True", "hMC_USS_True", kTHnSparseF, {cfgCentAxis, ptAxis, minvAxis});
-      histos.add("hMC_kstar_True", "hMC_kstar_True", kTHnSparseF, {cfgCentAxis, ptAxis});
-
-      histos.add("hMC_USS_pion", "hMC_USS_pion", kTHnSparseF, {cfgCentAxis, ptAxis, minvAxis});
-      histos.add("hMC_LSS_pion", "hMC_LSS_pion", kTHnSparseF, {cfgCentAxis, ptAxis, minvAxis});
-      histos.add("hMC_USS_Mix_pion", "hMC_USS_Mix_pion", kTHnSparseF, {cfgCentAxis, ptAxis, minvAxis});
-      histos.add("hMC_LSS_Mix_pion", "hMC_LSS_Mix_pion", kTHnSparseF, {cfgCentAxis, ptAxis, minvAxis});
-      histos.add("hMC_USS_pion_True", "hMC_USS_pion_True", kTHnSparseF, {cfgCentAxis, ptAxis, minvAxis});
     }
   } // end of init
 
@@ -226,7 +221,6 @@ struct kstarInOO {
       histos.fill(HIST("hPosZ_BC"), event.posZ());
       histos.fill(HIST("hcentFT0C_BC"), event.centFT0C());
     }
-
     if (!event.sel8())
       return false;
     if (std::abs(event.posZ()) > cfgEventVtxCut)
@@ -264,6 +258,7 @@ struct kstarInOO {
       histos.fill(HIST("hTPCChi2_BC"), track.tpcChi2NCl());
       histos.fill(HIST("QA_track_pT_BC"), track.pt());
     }
+
     if (cfgTrackGlobalSel && !track.isGlobalTrack())
       return false;
     if (track.pt() < cfgTrackMinPt)
@@ -278,11 +273,11 @@ struct kstarInOO {
       return false;
     if (cfgTrackGlobalWoDCATrack && !track.isGlobalTrackWoDCA())
       return false;
-    if (track.tpcNClsFindable() < cfgTracknFindableTPCClusters)
+    if (cfgTracknFindableTPCClusters > 0 && track.tpcNClsFindable() < cfgTracknFindableTPCClusters)
       return false;
     if (track.tpcNClsCrossedRows() < cfgTracknTPCCrossedRows)
       return false;
-    if (track.tpcCrossedRowsOverFindableCls() > cfgTracknRowsOverFindable)
+    if (cfgTracknRowsOverFindable > 0 && track.tpcCrossedRowsOverFindableCls() > cfgTracknRowsOverFindable)
       return false;
     if (track.tpcChi2NCl() > cfgTracknTPCChi2)
       return false;
@@ -358,7 +353,7 @@ struct kstarInOO {
     } else {
       tofPIDPassed = true;
     }
-    // TPC & TOF
+    // TPC &   TOF
     if (tpcPIDPassed && tofPIDPassed) {
       if (cfgTrackCutQA && QA) {
         histos.fill(HIST("QA_nSigma_pion_TPC_AC"), candidate.pt(), candidate.tpcNSigmaPi());
@@ -378,9 +373,6 @@ struct kstarInOO {
     auto centrality = collision1.centFT0C();
 
     for (const auto& [trk1, trk2] : combinations(o2::soa::CombinationsFullIndexPolicy(tracks1, tracks2))) {
-      if (std::fabs(trk1.signed1Pt()) <= 0.f || std::fabs(trk2.signed1Pt()) <= 0.f)
-        continue;
-
       auto [KstarPt, Minv] = minvReconstruction(trk1, trk2, QA);
 
       double conjugate = trk1.sign() * trk2.sign();
@@ -414,8 +406,6 @@ struct kstarInOO {
     for (const auto& [trk1, trk2] : combinations(o2::soa::CombinationsFullIndexPolicy(tracks1, tracks2))) {
       if (!trk1.has_mcParticle() || !trk2.has_mcParticle())
         continue;
-      if (std::fabs(trk1.signed1Pt()) <= 0.f || std::fabs(trk2.signed1Pt()) <= 0.f)
-        continue;
       auto [KstarPt_Kpi, Minv_Kpi] = minvReconstruction(trk1, trk2, QA);
 
       double conjugate = trk1.sign() * trk2.sign();
@@ -440,10 +430,6 @@ struct kstarInOO {
       // Gen MC
       auto particle1 = trk1.mcParticle();
       auto particle2 = trk2.mcParticle();
-      if (std::fabs(particle1.pdgCode()) != 321)
-        continue; // Not Kaon
-      if (std::fabs(particle2.pdgCode()) != 211)
-        continue; // Not Pion
 
       if (!particle1.has_mothers() || !particle2.has_mothers()) {
         continue;
@@ -483,15 +469,18 @@ struct kstarInOO {
   {
     if (!trackSelection(trk1, false) || !trackSelection(trk2, false))
       return {-1.0, -1.0};
-    if (!trackPIDKaon(trk1, QA) || !trackPIDPion(trk2, QA))
+
+    if (!trackPIDKaon(trk1, QA) || !trackPIDPion(trk2, QA)) {
       return {-1.0, -1.0};
+    }
+
     if (trk1.globalIndex() == trk2.globalIndex())
       return {-1.0, -1.0};
 
     TLorentzVector lDecayDaughter1, lDecayDaughter2, lResonance;
-
     lDecayDaughter1.SetXYZM(trk1.px(), trk1.py(), trk1.pz(), massKa);
     lDecayDaughter2.SetXYZM(trk2.px(), trk2.py(), trk2.pz(), massPi);
+
     lResonance = lDecayDaughter1 + lDecayDaughter2;
 
     if (std::abs(lResonance.Eta()) > cfgTrackMaxEta)
@@ -573,7 +562,7 @@ struct kstarInOO {
   //|
   //|                  MC STUFF (SE)
   //|
-  //=======================================================
+  //=========================================================
   int nEventsMC = 0;
   void processSameEventMC(EventCandidates::iterator const& collision, TrackCandidatesMC const& tracks, aod::McParticles const&)
   {
